@@ -1,0 +1,14 @@
+﻿Variable;Role;Level;Description
+Bad;Response;Binary;1 = el cliente incumplió con el préstamo o está seriamente moroso, 0 = el cliente está al día
+CLAge;Predictor;Interval;Antigüedad de la línea de crédito más antigua en meses
+CLNo;Predictor;Interval;Número de líneas de crédito
+DebtInc;Predictor;Interval;Relación deuda-ingresos
+Delinq;Predictor;Interval;Número de líneas de crédito en mora
+Derog;Predictor;Interval;Numero de informes desfavorables
+Job;Predictor;Nominal;Seis categorías ocupacionales
+Loan;Predictor;Interval;Monto de la solicitud de préstamo
+MortDue;Predictor;Interval;Monto adeudado en la hipoteca existente
+nInq;Predictor;Interval;Número reciente de consultas de crédito
+Reason;Predictor;Binary;DebtCon = consolidación de deudas, HomeImp = mejoras para el hogar
+Value;Predictor;Interval;Valor de la propiedad actual (inmueble)
+YoJ;Predictor;Interval;Años en el trabajo actual
