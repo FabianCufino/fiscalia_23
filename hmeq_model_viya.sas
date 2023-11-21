@@ -65,12 +65,10 @@ table _partind_;
 run;
 
 
-
-
 /* Modelos de arbol*/
 ods noproctitle;
-proc treesplit data=MYCAS.HMEQ_PARTITION maxdepth=11 numbin=19 maxbranch=3 
-		minleafsize=6;
+proc treesplit data=MYCAS.HMEQ_PARTITION maxdepth=10 numbin=20 maxbranch=2 
+		minleafsize=6 plots=all;
 	partition role=_PartInd_ (test='0' train='1');
 	input LOAN MORTDUE VALUE YOJ DEROG DELINQ CLAGE NINQ CLNO DEBTINC / 
 		level=interval;
@@ -79,8 +77,8 @@ proc treesplit data=MYCAS.HMEQ_PARTITION maxdepth=11 numbin=19 maxbranch=3
 	grow igr;
 	prune none;
 	score out=MYCAS.hmeq_tree1_score copyvars=(BAD LOAN MORTDUE VALUE YOJ DEROG 
-		DELINQ CLAGE NINQ CLNO DEBTINC REASON JOB);
-	ods output VariableImportance=WORK.hmeq_tree_var_imp;
+		DELINQ CLAGE NINQ CLNO DEBTINC REASON JOB) ;
+	ods output VariableImportance=WORK.hmeq_tree_var_imp Modelinfo=work.hmeq_tree1_ModelInfo 
+				TreePerformance = work.hmeq_tree1_performance;
 run;
-
 
