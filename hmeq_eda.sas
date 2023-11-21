@@ -1,9 +1,13 @@
 /* Codigo SAS 9.4*/
 
-
-
-
 filename file url "https://raw.githubusercontent.com/FabianCufino/fiscalia_23/main/data/hmeq.csv" termstr=crlf;
+
+
+proc contents data= work.hmeq out=hmeq_metadata;
+
+data hmeq_metadata_num (keep= name);
+set hmeq_metadata (where= ( type= 1) );
+run;
 
 
 proc import datafile= file
@@ -16,11 +20,11 @@ run;
 ods graphics / reset width=6.4in height=4.8in imagemap;
 
 
-
-
-
-
 /* analisis exploratorio*/ 
+
+proc summary data=HMEQ MEAN MEDIAN MAX MIN MISSING N;
+vars 
+
 
 /* analisis univariado*/
 
@@ -52,19 +56,3 @@ proc sgplot data=WORK.HMEQ;
 	yaxis grid;
 run;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-ods graphics / reset;
