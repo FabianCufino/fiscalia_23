@@ -3,13 +3,6 @@
 filename file url "https://raw.githubusercontent.com/FabianCufino/fiscalia_23/main/data/hmeq.csv" termstr=crlf;
 
 
-proc contents data= work.hmeq out=hmeq_metadata;
-
-data hmeq_metadata_num (keep= name);
-set hmeq_metadata (where= ( type= 1) );
-run;
-
-
 proc import datafile= file
 out=HMEQ
 replace
@@ -17,13 +10,17 @@ dbms=csv;
 run;
 
 
-ods graphics / reset width=6.4in height=4.8in imagemap;
+/* con proc contents podemos revisar la metadata de tablas SAS*/
+proc contents data= work.hmeq out=hmeq_metadata;
 
 
 /* analisis exploratorio*/ 
+ods graphics / reset width=6.4in height=4.8in imagemap;
 
-proc summary data=HMEQ MEAN MEDIAN MAX MIN MISSING N;
-vars 
+
+proc summary data=HMEQ MEAN MEDIAN MAX MIN MISSING N print;
+vars bad clage clno debtinc loan mortdue value yoj ninq derog delinq;
+run;
 
 
 /* analisis univariado*/
@@ -55,4 +52,3 @@ proc sgplot data=WORK.HMEQ;
 		transparency=0.25) capshape=line;
 	yaxis grid;
 run;
-
