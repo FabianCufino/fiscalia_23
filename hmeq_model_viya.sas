@@ -15,5 +15,13 @@ filename hmeq url 'https://raw.githubusercontent.com/FabianCufino/fiscalia_23/ma
 %let all_inputs      = &interval_inputs &class_inputs;
 
 
-proc import file=hmeq out=mycas.hmeq dbms=csv;
+proc import file=hmeq out=mycas.hmeq dbms=csv replace;
+run;
+
+
+proc mdsummary data = mycas.&indata.;
+  var _numeric_;
+  output out=mycas.hmeq_summary;
+run;
+proc print data=mycas.hmeq_summary;
 run;
