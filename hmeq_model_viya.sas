@@ -77,30 +77,55 @@ proc treesplit data=MYCAS.HMEQ_PARTITION maxdepth=10 numbin=20 maxbranch=2
 	grow igr;
 	prune costcomplexity;
 	/* nota seleccionar el path desde ruta home, o cualquier ruta de server*/
-	code comment file="/home/fabian.cufino@bitechco.com.co/tree1_score.sas";
-
+	*code comment file="/home/fabian.cufino@bitechco.com.co/treeselect_score.sas";
+	code out= mycas.hmeq_tree1_score_code;
 	score out=MYCAS.hmeq_tree1_score copyvars=(BAD LOAN MORTDUE VALUE YOJ DEROG 
 		DELINQ CLAGE NINQ CLNO DEBTINC REASON JOB) ;
-	ods output VariableImportance=WORK.hmeq_tree1_var_imp Modelinfo=work.hmeq_tree1_ModelInfo 
+	ods output VariableImportance=WORK.hmeq_tree_var_imp Modelinfo=work.hmeq_tree1_ModelInfo 
 				TreePerformance = work.hmeq_tree1_performance;
 run;
 
 
-/* arbol 2*/ 
-/* Usa algunas opciones para el tuneo de parametros*/
+/*modelo Random Forest*/
 
-proc treesplit data=MYCAS.HMEQ_PARTITION;
+
+/* notese la estructura a nivel de sintaxis similar con Arboles*/
+/* inbagfraction: especifica el porcentaje de data usada para cada arbol*/
+/* vars_to_try: especifica la cantidad de variables independientes a usar en cada arbol
+	por defecto toma la raiz cuadrada del numero de inputs*/
+
+
+
+proc forest data=MYCAS.HMEQ_PARTITION maxdepth=10 inbagfraction=0.7 vars_to_try=3  seed=1234 
+		numbin=20 vote=majority outmodel=mycas.hmeq_forest1_logic;
 	partition role=_PartInd_ (test='0' train='1');
+	target BAD / level=nominal;
 	input LOAN MORTDUE VALUE YOJ DEROG DELINQ CLAGE NINQ CLNO DEBTINC / 
 		level=interval;
 	input REASON JOB / level=nominal;
-	target BAD / level=nominal;
-	prune costcomplexity(leaves=25);
-	code comment file="/home/fabian.cufino@bitechco.com.co/tree2_score.sas";
-	autotune tuningparameters=(maxdepth(init=5 ub=8) numbin(exclude) 
-		criterion(values=entropy igr gini) ) searchmethod=random samplesize=30 
-		objective=misc maxtime=%sysevalf(65*60);
-	ods output VariableImportance=WORK.hmeq_tree2_var_imp Modelinfo=work.hmeq_tree2_ModelInfo 
-				TreePerformance = work.hmeq_tree2_performance;
+	grow entropy;
+	ods output FitStatistics=Work._Forest_FitStats_ 
+		VariableImportance=Work._Forest_VarImp_;
+	score out=mycas.hmeq_forest1_scored copyvars=(BAD LOAN MORTDUE VALUE YOJ DEROG 
+		DELINQ CLAGE NINQ CLNO DEBTINC REASON JOB);
+	savestate rstore=mycas.hmeq_forest1_scoring_m;
+	id LOAN MORTDUE VALUE YOJ DEROG DELINQ CLAGE NINQ CLNO DEBTINC REASON JOB;
 run;
 
+proc sgplot data=Work._Forest_FitStats_;
+	title3 'Misclassifications by Number of Trees';
+	title4 'Out-of-Bag vs. Training';
+	series x=Trees y=MiscTrain;
+	series x=Trees y=MiscOob /lineattrs=(pattern=shortdash thickness=2);
+	yaxis label='Misclassification Rate';
+	label Trees='Number of Trees';
+	label MiscTrain='Training';
+	label MiscOob='OOB';
+run;
+
+title3;
+
+proc sgplot data=Work._Forest_VarImp_;
+	title3 'Variable Importance';
+	hbar variable / response=importance nostatlabel categoryorder=respdesc;
+run;
