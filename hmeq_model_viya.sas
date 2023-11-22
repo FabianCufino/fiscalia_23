@@ -75,10 +75,32 @@ proc treesplit data=MYCAS.HMEQ_PARTITION maxdepth=10 numbin=20 maxbranch=2
 	input REASON JOB / level=nominal;
 	target BAD / level=nominal;
 	grow igr;
-	prune none;
+	prune costcomplexity;
+	/* nota seleccionar el path desde ruta home, o cualquier ruta de server*/
+	code comment file="/home/fabian.cufino@bitechco.com.co/tree1_score.sas";
+
 	score out=MYCAS.hmeq_tree1_score copyvars=(BAD LOAN MORTDUE VALUE YOJ DEROG 
 		DELINQ CLAGE NINQ CLNO DEBTINC REASON JOB) ;
-	ods output VariableImportance=WORK.hmeq_tree_var_imp Modelinfo=work.hmeq_tree1_ModelInfo 
+	ods output VariableImportance=WORK.hmeq_tree1_var_imp Modelinfo=work.hmeq_tree1_ModelInfo 
 				TreePerformance = work.hmeq_tree1_performance;
+run;
+
+
+/* arbol 2*/ 
+/* Usa algunas opciones para el tuneo de parametros*/
+
+proc treesplit data=MYCAS.HMEQ_PARTITION;
+	partition role=_PartInd_ (test='0' train='1');
+	input LOAN MORTDUE VALUE YOJ DEROG DELINQ CLAGE NINQ CLNO DEBTINC / 
+		level=interval;
+	input REASON JOB / level=nominal;
+	target BAD / level=nominal;
+	prune costcomplexity(leaves=25);
+	code comment file="/home/fabian.cufino@bitechco.com.co/tree2_score.sas";
+	autotune tuningparameters=(maxdepth(init=5 ub=8) numbin(exclude) 
+		criterion(values=entropy igr gini) ) searchmethod=random samplesize=30 
+		objective=misc maxtime=%sysevalf(65*60);
+	ods output VariableImportance=WORK.hmeq_tree2_var_imp Modelinfo=work.hmeq_tree2_ModelInfo 
+				TreePerformance = work.hmeq_tree2_performance;
 run;
 
