@@ -1,0 +1,22 @@
+Variable;Descripcion;tipo
+battery_power;bateria en mAh;interval
+blue;Bluetoth;nominal
+clock_speed;Velocidad del procesador;interval
+dual_sim;Tiene dual sim si=1, no =0;nominal
+fc;Megapixels en camara frontal;interval
+four_g;Tien 4G, 1=si, 2=no;nominal
+int_memory;Memoria interna en GB;interval
+m_dep;grosor en cm;interval
+mobile_wt;peso del telefono;interval
+n_cores;numero de cores del procesador;interval
+pc;mexapixeles de la camara principal;interval
+px_height;resolución de pixeles altur;interval
+px_width;resolución de pixeles groso;interval
+ram;gigas de ram;interval
+sc_h;altura de la pantalla en cm;interval
+sc_w;grosor de la pantalla en cm;interval
+talk_time;tiempo de duracion en llamadas horas;interval
+three_g;tiene 3g;nominal
+touch_screen;tiene touch screen 1=si, 2=no;nominal
+wifi;tiene wifi 1=si, 2=no;nominal
+price_range;rango de precios: 0=low cost, 1=medium cost, 2= high cost, 3= high cost.;target
