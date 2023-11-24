@@ -54,8 +54,9 @@ run;
 
 data robos_prep;
 set robos;
+format mes date9.;
 id_dane = catx("-","CO",put(codigo_dane/1000, z5.));
-mes = mdy(month(fecha_hecho),01,year(fecha_hecho));
+fecha = mdy(month(fecha_hecho),01,year(fecha_hecho));
 
 run;
 
@@ -65,12 +66,18 @@ create table robos_va as select
 	﻿DEPARTAMENTO,
 	municipio,
 	clase_bien,
-	mes,
+	fecha,
 	sum(cantidad) as q_robos
 from robos_prep
-group by ﻿DEPARTAMENTO, municipio, clase_bien, mes;
+group by ﻿DEPARTAMENTO, municipio, clase_bien, fecha;
 quit;
 
+cas auto;
+
 proc casutil;
-load data=robos_va outcaslib="casuser" casdata="robos_va" promote;
+load data=robos_va outcaslib="casuser" casdata="robos_va" replace;
 run;
+
+
+
+
