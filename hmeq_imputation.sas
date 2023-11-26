@@ -7,6 +7,7 @@ filename hmeq url "https://raw.githubusercontent.com/FabianCufino/fiscalia_23/ma
 proc import file= hmeq out=mycas.hmeq dbms=csv replace;
 run;
 
+
 proc casutil sessref=auto;
 promote casdata="hmeq" incaslib="casuser" outcaslib="casuser";
 run;
