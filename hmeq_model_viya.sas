@@ -2,7 +2,7 @@
 cas casauto;
 caslib _all_ assign;
 /* generamos alias de libreria CAS por defecto CASUSER*/
-libname mycas cas;
+
 
 filename hmeq url 'https://raw.githubusercontent.com/FabianCufino/fiscalia_23/main/data/hmeq.csv'; 
 
@@ -14,8 +14,9 @@ filename hmeq url 'https://raw.githubusercontent.com/FabianCufino/fiscalia_23/ma
 %let interval_inputs = clage clno debtinc loan mortdue value yoj ninq derog delinq;
 %let all_inputs      = &interval_inputs &class_inputs;
 
-
-proc import file=hmeq out=mycas.hmeq dbms=csv replace;
+/*nota: proc import intenta adivinar el formato y tipo de cada variable,cuando se importa desde un plano*/
+/*para un mayor control del proceso de importación se puede usar infile en data step*/
+proc import file=hmeq out=casuser.hmeq dbms=csv replace;
 run;
 
 
@@ -25,26 +26,18 @@ proc casutil;
 run;
 /* notese que el procedimiento mdsummary en viya es similar 
 	en sintaxis como en proposito al procedimiento summary de 9.4*/
-proc mdsummary data = mycas.&indata.;
+proc mdsummary data = casuser.hmeq;
   var _numeric_;
-  output out=mycas.hmeq_summary;
+
+  output out=casuser.hmeq_summary;
 run;
-proc print data=mycas.hmeq_summary;
+proc print data=casuser.hmeq_summary;
 run;
 
 
 ods graphics;
-proc sgplot data = mycas.hmeq_summary;
+proc sgplot data = casuser.hmeq_summary;
   vbar _column_ / response=_nmiss_;
-run;
-
-/*procedimiento para imputación*/
-proc varimpute data=mycas.&indata.;
-  input clage       / ctech = mean;
-  input delinq      / ctech = median;
-  input ninq        / ctech = value cvalues=2;
-  input debtinc yoj / ctech = value cvalues=35.0, 7;
-  output out=mycas.hmeq_impute COPYVARS=(_all_);
 run;
 
 /* Algunos modelos pueden generar la partición dentro de su algoritmo,
@@ -57,15 +50,15 @@ run;
 ods noproctitle;
 
 /* generamos particiones, por el momento train y test*/
-proc partition data=MYCAS.HMEQ partind samppct=70;
+proc partition data=casuser.HMEQ partind samppct=70;
 	by BAD;
-	output out=mycas.hmeq_partition;
+	output out=casuser.hmeq_partition;
 run;
 
 
 /* validamos la variable indicadora de la partición*/
 	/* _PartInd_  = 0: Test, 1 = Train, 2 = Validation*/
-proc freqtab data=mycas.hmeq_partition;
+proc freqtab data=casuser.hmeq_partition;
 table _partind_;
 run;
 
@@ -76,7 +69,7 @@ run;
 	 como alternativa en 9.4 y según licencia
 	o proc dtree para decision tree*/
 ods noproctitle;
-proc treesplit data=MYCAS.HMEQ_PARTITION  maxdepth=10 numbin=20 maxbranch=2 
+proc treesplit data=casuser.HMEQ_PARTITION  maxdepth=10 numbin=20 maxbranch=2 
 		minleafsize=6 plots=all;
 	partition role=_PartInd_ (test='0' train='1');
 	input LOAN MORTDUE VALUE YOJ DEROG DELINQ CLAGE NINQ CLNO DEBTINC / 
@@ -87,8 +80,8 @@ proc treesplit data=MYCAS.HMEQ_PARTITION  maxdepth=10 numbin=20 maxbranch=2
 	prune costcomplexity;
 	/* nota seleccionar el path desde ruta home, o cualquier ruta de server*/
 	*code comment file="/home/fabian.cufino@bitechco.com.co/treeselect_score.sas";
-	code out= mycas.hmeq_tree1_score_code;
-	score out=MYCAS.hmeq_tree1_score copyvars=(BAD LOAN MORTDUE VALUE YOJ DEROG 
+	code out= casuser.hmeq_tree1_score_code;
+	score out=casuser.hmeq_tree1_score copyvars=(BAD LOAN MORTDUE VALUE YOJ DEROG 
 		DELINQ CLAGE NINQ CLNO DEBTINC REASON JOB) ;
 	ods output VariableImportance=WORK.hmeq_tree_var_imp Modelinfo=work.hmeq_tree1_ModelInfo 
 				TreePerformance = work.hmeq_tree1_performance;
