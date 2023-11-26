@@ -1,33 +1,31 @@
 cas auto;
 
 caslib _all_ assign;
-libname mycas cas caslib="casuser";
 
 filename hmeq url "https://raw.githubusercontent.com/FabianCufino/fiscalia_23/main/data/hmeq.csv" ;
 
 proc import file= hmeq out=mycas.hmeq dbms=csv replace;
 run;
 
-/*generamos variable bad como nominal, para analisis no supervisado*/
-data mycas.hmeq2 (drop=temp);
-set mycas.hmeq(rename= (bad = temp));
-bad = put(temp,2.);
+proc casutil sessref=auto;
+promote casdata="hmeq" incaslib="casuser" outcaslib="casuser";
 run;
 
+
 /*generamos analisis descriptivo*/
-proc mdsummary data = mycas.hmeq2;
+proc mdsummary data = casuser.hmeq;
   var _numeric_;
-  output out=mycas.hmeq_summary;
+  output out=casuser.hmeq_summary;
 run;
 
 
 /* imputacion con proc varimpute*/
-proc varimpute data=mycas.hmeq2;
+proc varimpute data=casuser.hmeq;
   input clage       / ctech = mean;
   input delinq      / ctech = median;
   input ninq        / ctech = value cvalues=2;
   input debtinc yoj / ctech = value cvalues=35.0, 7;
-  output out=mycas.hmeq_impute COPYVARS=(_all_);
+  output out=casuser.hmeq_impute COPYVARS=(_all_);
 run;
 
 
@@ -96,12 +94,9 @@ las estimaciones agrupadas son insesgadas y tienen las propiedades estadísticas
 /*fcs Metodo para variables continuas condicionadas*/
 /* NBITER: numero de iteraciones, (donde cada valor imputado se multiplica por este valor*/
 /* var variables del analisis*/
-
+proc import file= hmeq out=hmeq dbms=csv replace; run;
 
 proc mi data=hmeq seed=13951639 nimpute=pctmissing(min=5 max=20) out=hmeq_mi;
 FCS NBITER = 4 reg;
 var YOJ DEROG VALUE CLAGE NINQ ;
 run;
-
-
-
